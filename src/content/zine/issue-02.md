@@ -6,7 +6,7 @@ thesis: Why the pursuit of a refined deliverable often destroys the thinking tha
 season: Spring 2025
 coverAccent: "#1E6C62"
 date: 2025-04-01
-status: upcoming
+status: published
 ---
 
 The second issue examines process — specifically, the moment in any creative project where the work transitions from alive to finished, and what gets lost in that transition.
