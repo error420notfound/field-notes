@@ -7,21 +7,21 @@ const sorted  = allLogs.sort((a, b) => b.data.date.valueOf() - a.data.date.value
 
 const typeLabels: Record<string, string> = {
   'project-log': 'Project Log',
-  'reflection': 'Reflection',
-  'decision': 'Decision',
-  'weekly': 'Weekly',
+  'reflection':  'Reflection',
+  'decision':    'Decision',
+  'weekly':      'Weekly',
 };
 
 const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-// Group by year/month for timeline feel
-type GroupedEntries = Record<string, typeof sorted>;
-const grouped: GroupedEntries = {};
+// Group by year, descending
+const byYear: Record<string, typeof sorted> = {};
 for (const entry of sorted) {
-  const key = entry.data.date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-  if (!grouped[key]) grouped[key] = [];
-  grouped[key].push(entry);
+  const year = entry.data.date.getFullYear().toString();
+  if (!byYear[year]) byYear[year] = [];
+  byYear[year].push(entry);
 }
+const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a));
 ---
 
 <BaseLayout
@@ -41,44 +41,32 @@ for (const entry of sorted) {
 
   <hr />
 
-  <!-- Type legend -->
-  <div class="container" style="padding-block:1.25rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; justify-content:space-between">
-    <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
-      {Object.entries(typeLabels).map(([k, v]) => (
-        <span class="tag tag--muted">{v}</span>
-      ))}
-    </div>
+  <!-- Entry count -->
+  <div class="container" style="padding-block:1.25rem; display:flex; justify-content:flex-end">
     <span class="t-mono" style="opacity:0.4">{sorted.length} entries</span>
   </div>
 
   <hr />
 
-  <!-- Timeline grouped by month -->
-  <div class="container journal-timeline" id="journal-timeline">
-    {Object.entries(grouped).map(([month, entries], groupIndex) => (
-      <div class="journal-group" data-group={groupIndex}>
-        <div class="journal-group__month">
-          <p class="t-label" style="opacity:0.35">{month}</p>
+  <!-- Entry list, grouped by year -->
+  <div class="container journal-list" id="journal-list" style="padding-block:var(--space-section)">
+    {years.map((year) => (
+      <div class="year-group" data-year={year}>
+        <div class="year-marker">
+          <span class="t-mono year-marker__label">{year}</span>
+          <div class="year-marker__rule" role="presentation"></div>
         </div>
-        <div class="journal-group__entries">
-          {entries.map((entry) => (
-            <a href={`/journal/${entry.slug}`} class="journal-row">
-              <div class="journal-row__date">
-                <span class="t-mono">{formatDate(entry.data.date)}</span>
-                <span class="tag tag--muted" style="margin-top:0.3rem">{typeLabels[entry.data.type]}</span>
-              </div>
-              <div class="journal-row__content">
-                <p class="journal-row__title">{entry.data.title}</p>
+        <div class="year-group__entries">
+          {byYear[year].map((entry) => (
+            <a href={`/journal/${entry.slug}`} class="entry-row">
+              <span class="entry-row__type">{typeLabels[entry.data.type]}</span>
+              <div class="entry-row__main">
+                <p class="entry-row__title">{entry.data.title}</p>
                 {entry.data.subtitle && (
-                  <p class="journal-row__sub">{entry.data.subtitle}</p>
-                )}
-                {entry.data.project && (
-                  <p class="t-mono" style="opacity:0.35; margin-top:0.35rem; font-size:10px">
-                    Project: {entry.data.project}
-                  </p>
+                  <p class="entry-row__desc">{entry.data.subtitle}</p>
                 )}
               </div>
-              <span class="btn btn--ghost" style="opacity:0.4; flex-shrink:0">Read →</span>
+              <span class="entry-row__date">{formatDate(entry.data.date)}</span>
             </a>
           ))}
         </div>
@@ -97,53 +85,15 @@ for (const entry of sorted) {
     gap: 0.5rem;
   }
 
-  .journal-timeline {
-    padding-block: var(--space-section);
+  .journal-list {
     display: flex;
     flex-direction: column;
-    gap: 4rem;
+    gap: 3rem;
   }
 
-  .journal-group {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 2rem;
-    align-items: start;
-  }
-
-  .journal-group__month {
-    position: sticky;
-    top: 80px;
-    padding-top: 1.5rem;
-    border-top: var(--border-width) solid var(--border);
-  }
-
-  .journal-group__entries {
-    border-top: var(--border-width) solid var(--border);
+  .year-group__entries {
     display: flex;
     flex-direction: column;
-  }
-
-  /* Override journal-row for this page — date column needs stacking */
-  .journal-timeline .journal-row {
-    grid-template-columns: 160px 1fr auto;
-    align-items: start;
-    gap: 1.5rem;
-  }
-
-  .journal-row__date {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    padding-top: 2px;
-  }
-
-  .journal-row__content { display: flex; flex-direction: column; }
-
-  @media (max-width: 900px) {
-    .journal-group { grid-template-columns: 1fr; gap: 1rem; }
-    .journal-group__month { position: static; }
-    .journal-timeline .journal-row { grid-template-columns: 1fr; gap: 0.75rem; }
   }
 </style>
 
@@ -157,14 +107,14 @@ for (const entry of sorted) {
     animate(header, { opacity:[0,1], transform:['translateY(16px)','translateY(0)'] }, { duration:0.5, easing:ease, delay:0.08 });
   }
 
-  document.querySelectorAll('.journal-group').forEach(group => {
-    const rows = group.querySelectorAll('.journal-row');
+  document.querySelectorAll<HTMLElement>('.year-group').forEach(group => {
+    const rows = group.querySelectorAll('.entry-row');
     rows.forEach(r => { (r as HTMLElement).style.opacity = '0'; });
-    inView(group as HTMLElement, () => {
+    inView(group, () => {
       animate(rows as NodeListOf<Element>,
-        { opacity:[0,1], transform:['translateY(20px)','translateY(0)'] },
-        { duration:0.45, easing:ease, delay:stagger(0.08) }
+        { opacity:[0,1], transform:['translateY(12px)','translateY(0)'] },
+        { duration:0.4, easing:ease, delay:stagger(0.05) }
       );
-    }, { amount: 0.1 });
+    }, { amount: 0.05 });
   });
 </script>

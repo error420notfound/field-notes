@@ -17,10 +17,14 @@ const typeLabels: Record<string, string> = {
 
 const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-const counts: Record<string, number> = { all: sorted.length };
-for (const t of ['reading','signal','application','calibration']) {
-  counts[t] = sorted.filter(e => e.data.type === t).length;
+// Group by year, descending
+const byYear: Record<string, typeof sorted> = {};
+for (const entry of sorted) {
+  const year = entry.data.date.getFullYear().toString();
+  if (!byYear[year]) byYear[year] = [];
+  byYear[year].push(entry);
 }
+const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a));
 ---
 
 <BaseLayout
@@ -51,7 +55,6 @@ for (const t of ['reading','signal','application','calibration']) {
           aria-selected={t === 'all'}
         >
           {typeLabels[t]}
-          <span style="opacity:0.4; margin-left:4px">({counts[t]})</span>
         </button>
       ))}
     </div>
@@ -60,37 +63,32 @@ for (const t of ['reading','signal','application','calibration']) {
 
   <hr />
 
-  <!-- Entry grid -->
-  <div class="container" style="padding-block:var(--space-section)">
-    <div class="archive-grid" id="archive-grid">
-      {sorted.map((entry) => (
-        <a
-          href={`/archive/${entry.slug}`}
-          class="entry-card"
-          data-type={entry.data.type}
-        >
-          <div class="entry-card__meta">
-            <span class={`tag ${entry.data.featured ? 'tag--accent' : ''}`}>
-              {typeLabels[entry.data.type]}
-            </span>
-            {entry.data.featured && <span class="tag tag--muted">Featured</span>}
-          </div>
-
-          <p class="entry-card__title">{entry.data.title}</p>
-
-          <p class="entry-card__thesis">{entry.data.thesis}</p>
-
-          <div class="entry-card__footer">
-            <div style="display:flex; gap:0.4rem; flex-wrap:wrap">
-              {entry.data.tags.slice(0, 3).map(tag => (
-                <span class="t-mono" style="opacity:0.35; font-size:10px">{tag}</span>
-              ))}
-            </div>
-            <span class="t-mono" style="opacity:0.35">{formatDate(entry.data.date)}</span>
-          </div>
-        </a>
-      ))}
-    </div>
+  <!-- Entry list, grouped by year -->
+  <div class="container archive-list" id="archive-list" style="padding-block:var(--space-section)">
+    {years.map((year) => (
+      <div class="year-group" data-year={year}>
+        <div class="year-marker">
+          <span class="t-mono year-marker__label">{year}</span>
+          <div class="year-marker__rule" role="presentation"></div>
+        </div>
+        <div class="year-group__entries">
+          {byYear[year].map((entry) => (
+            <a
+              href={`/archive/${entry.slug}`}
+              class="entry-row"
+              data-type={entry.data.type}
+            >
+              <span class="entry-row__type">{typeLabels[entry.data.type]}</span>
+              <div class="entry-row__main">
+                <p class="entry-row__title">{entry.data.title}</p>
+                <p class="entry-row__desc">{entry.data.thesis}</p>
+              </div>
+              <span class="entry-row__date">{formatDate(entry.data.date)}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
   </div>
 
 </BaseLayout>
@@ -104,18 +102,15 @@ for (const t of ['reading','signal','application','calibration']) {
     gap: 0.5rem;
   }
 
-  .archive-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-gap);
+  .archive-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
   }
 
-  @media (max-width: 1024px) {
-    .archive-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  @media (max-width: 640px) {
-    .archive-grid { grid-template-columns: 1fr; }
+  .year-group__entries {
+    display: flex;
+    flex-direction: column;
   }
 </style>
 
@@ -130,23 +125,23 @@ for (const t of ['reading','signal','application','calibration']) {
     animate(header, { opacity:[0,1], transform:['translateY(16px)','translateY(0)'] }, { duration:0.5, easing:ease, delay:0.08 });
   }
 
-  // Grid stagger on load
-  const grid  = document.getElementById('archive-grid');
-  const cards = grid?.querySelectorAll('.entry-card');
-  if (cards) {
-    cards.forEach(c => { (c as HTMLElement).style.opacity = '0'; });
-    inView(grid!, () => {
-      animate(cards as NodeListOf<Element>,
-        { opacity:[0,1], transform:['translateY(20px)','translateY(0)'] },
-        { duration:0.45, easing:ease, delay:stagger(0.06) }
+  // Row stagger on scroll
+  document.querySelectorAll<HTMLElement>('.year-group').forEach(group => {
+    const rows = group.querySelectorAll('.entry-row');
+    rows.forEach(r => { (r as HTMLElement).style.opacity = '0'; });
+    inView(group, () => {
+      animate(rows as NodeListOf<Element>,
+        { opacity:[0,1], transform:['translateY(12px)','translateY(0)'] },
+        { duration:0.4, easing:ease, delay:stagger(0.05) }
       );
     }, { amount: 0.05 });
-  }
+  });
 
   // Filter logic
-  const filterBar   = document.getElementById('filter-bar');
-  const countLabel  = document.getElementById('entry-count');
-  const allCards    = document.querySelectorAll<HTMLElement>('.entry-card');
+  const filterBar  = document.getElementById('filter-bar');
+  const countLabel = document.getElementById('entry-count');
+  const allRows    = document.querySelectorAll<HTMLElement>('.entry-row');
+  const allGroups  = document.querySelectorAll<HTMLElement>('.year-group');
 
   filterBar?.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest('.filter-bar__item') as HTMLButtonElement | null;
@@ -158,10 +153,17 @@ for (const t of ['reading','signal','application','calibration']) {
     const type = btn.dataset.type!;
     let visible = 0;
 
-    allCards.forEach(card => {
-      const show = type === 'all' || card.dataset.type === type;
-      card.style.display = show ? '' : 'none';
+    allRows.forEach(row => {
+      const show = type === 'all' || row.dataset.type === type;
+      row.style.display = show ? '' : 'none';
       if (show) visible++;
+    });
+
+    // Hide year groups that have no visible entries
+    allGroups.forEach(group => {
+      const hasVisible = Array.from(group.querySelectorAll<HTMLElement>('.entry-row'))
+        .some(r => r.style.display !== 'none');
+      group.style.display = hasVisible ? '' : 'none';
     });
 
     if (countLabel) countLabel.textContent = `${visible} entr${visible === 1 ? 'y' : 'ies'}`;

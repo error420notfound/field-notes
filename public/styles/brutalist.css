@@ -342,6 +342,94 @@
   .nav__link span.label-text { display: none; }
 }
 
+/* ── Year marker (archive / journal grouping) ───────────────── */
+.year-marker {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.year-marker__label {
+  font-size: var(--size-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.35;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.year-marker__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  opacity: 0.2;
+}
+
+/* ── Entry row (archive / journal listing) ──────────────────── */
+.entry-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  align-items: baseline;
+  column-gap: 2rem;
+  padding-block: 1.25rem;
+  border-bottom: var(--border-width) solid var(--border);
+  transition: background var(--transition);
+}
+
+.entry-row:hover { background: var(--surface-elevated); }
+
+.entry-row__type {
+  font-family: var(--font-mono);
+  font-size: var(--size-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  white-space: nowrap;
+  padding-top: 3px; /* optical alignment with display baseline */
+}
+
+.entry-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.entry-row__title {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 1.6vw, 22px);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.2;
+  transition: color var(--transition);
+}
+
+.entry-row:hover .entry-row__title { color: var(--accent); }
+
+.entry-row__desc {
+  font-family: var(--font-body);
+  font-size: var(--size-small);
+  opacity: 0.5;
+  line-height: 1.5;
+}
+
+.entry-row__date {
+  font-family: var(--font-mono);
+  font-size: var(--size-label);
+  letter-spacing: 0.06em;
+  opacity: 0.4;
+  white-space: nowrap;
+  padding-top: 3px;
+}
+
+@media (max-width: 640px) {
+  .entry-row {
+    grid-template-columns: 1fr auto;
+    row-gap: 0.5rem;
+  }
+  .entry-row__main { grid-column: 1 / -1; }
+}
+
 /* ── Archive filter bar ─────────────────────────────────────── */
 .filter-bar {
   display: flex;
