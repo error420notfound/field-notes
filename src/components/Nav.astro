@@ -2,6 +2,11 @@
 const { currentPath = '' } = Astro.props;
 
 const isActive = (path: string) => currentPath.startsWith(path);
+
+const activeLabel =
+  isActive('/archive') ? 'Archive' :
+  isActive('/journal') ? 'Journal' :
+  isActive('/zine')    ? 'Zine'    : 'Menu';
 ---
 
 <nav class="nav" id="main-nav">
@@ -10,29 +15,32 @@ const isActive = (path: string) => currentPath.startsWith(path);
     <span class="t-label" style="letter-spacing:0.08em">Field Notes</span>
   </a>
 
+  <!-- Desktop links -->
   <div class="nav__links">
-    <a
-      href="/archive"
-      class={`nav__link ${isActive('/archive') ? 'active' : ''}`}
-    >
+    <a href="/archive" class={`nav__link ${isActive('/archive') ? 'active' : ''}`}>
       <span class="nav__mode-dot" style="background: #2F9E8F;"></span>
       <span class="label-text">Archive</span>
     </a>
-    <a
-      href="/journal"
-      class={`nav__link ${isActive('/journal') ? 'active' : ''}`}
-    >
+    <a href="/journal" class={`nav__link ${isActive('/journal') ? 'active' : ''}`}>
       <span class="nav__mode-dot" style="background: #7DD4C5;"></span>
       <span class="label-text">Journal</span>
     </a>
-    <a
-      href="/zine"
-      class={`nav__link ${isActive('/zine') ? 'active' : ''}`}
-    >
+    <a href="/zine" class={`nav__link ${isActive('/zine') ? 'active' : ''}`}>
       <span class="nav__mode-dot" style="background: var(--teal-black-native, #031410);"></span>
       <span class="label-text">Zine</span>
     </a>
   </div>
+
+  <!-- Mobile menu toggle -->
+  <button
+    class="nav__menu-toggle"
+    id="nav-menu-toggle"
+    aria-expanded="false"
+    aria-controls="nav-dropdown"
+  >
+    <span id="nav-toggle-label">{activeLabel}</span>
+    <span class="nav__toggle-arrow" aria-hidden="true">▾</span>
+  </button>
 
   <div class="nav__right">
     <div style="display:flex; align-items:center; gap:8px">
@@ -42,9 +50,101 @@ const isActive = (path: string) => currentPath.startsWith(path);
   </div>
 </nav>
 
+<!-- Mobile dropdown (outside nav flow, fixed below) -->
+<div class="nav__dropdown" id="nav-dropdown" aria-hidden="true">
+  <a href="/archive" class={`nav__dropdown-link ${isActive('/archive') ? 'active' : ''}`}>
+    <span class="nav__mode-dot" style="background: #2F9E8F;"></span>
+    Archive
+  </a>
+  <a href="/journal" class={`nav__dropdown-link ${isActive('/journal') ? 'active' : ''}`}>
+    <span class="nav__mode-dot" style="background: #7DD4C5;"></span>
+    Journal
+  </a>
+  <a href="/zine" class={`nav__dropdown-link ${isActive('/zine') ? 'active' : ''}`}>
+    <span class="nav__mode-dot" style="background: var(--teal-black-native, #031410);"></span>
+    Zine
+  </a>
+</div>
+
+<style>
+  .nav__menu-toggle {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: var(--size-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    height: 100%;
+    flex: 1;
+    border: none;
+    background: none;
+    color: var(--fg);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .nav__menu-toggle:hover,
+  .nav__menu-toggle[aria-expanded="true"] {
+    background: var(--accent);
+    color: var(--black-native);
+  }
+
+  .nav__toggle-arrow {
+    font-size: 10px;
+    transition: transform var(--transition);
+  }
+
+  .nav__menu-toggle[aria-expanded="true"] .nav__toggle-arrow {
+    transform: rotate(180deg);
+  }
+
+  .nav__dropdown {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    background: var(--bg);
+    border-bottom: var(--border-width) solid var(--border);
+    display: none;
+    flex-direction: column;
+  }
+
+  .nav__dropdown.open { display: flex; }
+
+  .nav__dropdown-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem var(--gutter);
+    font-family: var(--font-mono);
+    font-size: var(--size-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: var(--border-width) solid var(--border);
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .nav__dropdown-link:last-child { border-bottom: none; }
+
+  .nav__dropdown-link:hover,
+  .nav__dropdown-link.active {
+    background: var(--accent);
+    color: var(--black-native);
+  }
+
+  @media (max-width: 768px) {
+    .nav__links { display: none; }
+    .nav__menu-toggle { display: flex; }
+  }
+</style>
+
 <script>
-  // Nav entrance animation
   import { animate } from 'motion';
+
+  // Nav entrance
   const nav = document.getElementById('main-nav');
   if (nav) {
     nav.style.opacity = '0';
@@ -53,9 +153,43 @@ const isActive = (path: string) => currentPath.startsWith(path);
       { duration: 0.4, easing: [0.16, 1, 0.3, 1] }
     );
   }
+
   // Show status text on wider screens
   const statusText = document.getElementById('nav-status');
   if (statusText && window.innerWidth > 900) {
     statusText.style.display = 'block';
   }
+
+  // Mobile dropdown toggle
+  const toggle   = document.getElementById('nav-menu-toggle') as HTMLButtonElement | null;
+  const dropdown = document.getElementById('nav-dropdown');
+
+  function openMenu() {
+    toggle?.setAttribute('aria-expanded', 'true');
+    dropdown?.classList.add('open');
+    dropdown?.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeMenu() {
+    toggle?.setAttribute('aria-expanded', 'false');
+    dropdown?.classList.remove('open');
+    dropdown?.setAttribute('aria-hidden', 'true');
+  }
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+    isOpen ? closeMenu() : openMenu();
+  });
+
+  // Close when a dropdown link is clicked
+  dropdown?.querySelectorAll('.nav__dropdown-link').forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!nav?.contains(e.target as Node) && !dropdown?.contains(e.target as Node)) {
+      closeMenu();
+    }
+  });
 </script>
