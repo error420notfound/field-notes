@@ -154,11 +154,9 @@ const activeLabel =
     );
   }
 
-  // Show status text on wider screens
+  // Show status text
   const statusText = document.getElementById('nav-status');
-  if (statusText && window.innerWidth > 900) {
-    statusText.style.display = 'block';
-  }
+  if (statusText) statusText.style.display = 'block';
 
   // Mobile dropdown toggle
   const toggle   = document.getElementById('nav-menu-toggle') as HTMLButtonElement | null;
