@@ -77,20 +77,26 @@ const formatDate = (d: string) =>
     </div>
 
     <!-- GRID VIEW -->
-    <div id="signals-grid" class="grid-3">
+    <div id="signals-grid" class="grid-2">
       {sorted.map((s) => (
-        <a href={`/signals/${s.slug}`} class="entry-card">
-          <div class="entry-card__meta">
-            <span class="tag">{s.source}</span>
-            <span class="t-mono" style="opacity:0.4">{s.author}</span>
+        <a href={`/signals/${s.slug}`} class="signals-grid-card">
+          <div class="signals-grid-card__hero">
+            <div class="signals-grid-card__hero-bg">
+              <div class="signals-grid-card__hero-content">
+                <p class="signals-grid-card__hero-title">{s.title}</p>
+                <div class="signals-grid-card__hero-meta">
+                  <span>{s.source}</span>
+                  <span>{s.author}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <p class="entry-card__title">{s.title}</p>
-          <p class="entry-card__thesis">{s.signal}</p>
-          <div class="entry-card__footer">
+          <div class="signals-grid-card__body">
+            <p class="signals-grid-card__signal">{s.signal}</p>
             <div style="display:flex; gap:0.4rem; flex-wrap:wrap">
               {s.tags.slice(0, 2).map((t) => <span class="tag tag--muted">{t}</span>)}
             </div>
-            <span class="t-mono" style="opacity:0.35">{formatDate(s.date)}</span>
+            <span class="t-mono" style="opacity:0.35; margin-top:auto">{formatDate(s.date)}</span>
           </div>
         </a>
       ))}
@@ -154,6 +160,72 @@ const formatDate = (d: string) =>
     gap: 0.4rem;
     flex-wrap: wrap;
     margin-top: 0.4rem;
+  }
+
+  .signals-grid-card {
+    border: var(--border-width) solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: background var(--transition);
+  }
+
+  .signals-grid-card:hover { background: var(--surface-elevated); }
+
+  .signals-grid-card__hero {
+    aspect-ratio: 3 / 1.5;
+    overflow: hidden;
+    border-bottom: var(--border-width) solid var(--border);
+  }
+
+  .signals-grid-card__hero-bg {
+    width: 100%;
+    height: 100%;
+    background: var(--black-native);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.5rem;
+  }
+
+  .signals-grid-card__hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .signals-grid-card__hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.2;
+    color: var(--text-on-dark);
+    max-width: 95%;
+  }
+
+  .signals-grid-card__hero-meta {
+    display: flex;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-on-dark);
+    opacity: 0.5;
+  }
+
+  .signals-grid-card__body {
+    padding: var(--space-card);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .signals-grid-card__signal {
+    font-family: var(--font-body);
+    font-size: var(--size-small);
+    line-height: 1.5;
+    opacity: 0.7;
   }
 </style>
 

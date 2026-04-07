@@ -37,39 +37,66 @@ const formatDate = (d: string) =>
       </div>
       <span class="t-mono" style="opacity:0.4">{formatDate(signal.date)}</span>
     </div>
+  </div>
 
-    <h1 class="t-h1" style="font-style:italic; margin-top:1.5rem">{signal.title}</h1>
+  <hr />
 
-    <div class="signals-entry-header__meta">
-      <span class="t-mono" style="opacity:0.5">{signal.source} · {signal.author}</span>
-      <a href={signal.url} target="_blank" rel="noopener noreferrer" class="btn btn--outline btn--sm">
-        Watch source →
-      </a>
+  <!-- Hero -->
+  <div class="container" id="entry-hero">
+    <div class="signals-hero">
+      <div class="signals-hero__image">
+        <div class="signals-hero__bg">
+          <div class="signals-hero__content">
+            <h1 class="signals-hero__title">{signal.title}</h1>
+            <div class="signals-hero__meta">
+              <span class="t-mono">{signal.source} · {signal.author}</span>
+            </div>
+            <div style="margin-top:1rem">
+              <a href={signal.url} target="_blank" rel="noopener noreferrer" class="btn btn--outline btn--sm">
+                Watch source →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <hr />
 
-  <!-- Body -->
+  <!-- Body + Sidebar -->
   <div class="container signals-entry-body" id="entry-body">
 
-    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem">Signal</p>
-    <blockquote class="signals-signal-block">{signal.signal}</blockquote>
+    <div class="signals-body-grid">
+      <article class="signals-body-content">
+        <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem">Signal</p>
+        <blockquote class="signals-signal-block">{signal.signal}</blockquote>
 
-    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Summary</p>
-    <p class="t-body" style="opacity:0.75; max-width:68ch">{signal.summary}</p>
+        <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Summary</p>
+        <p class="t-body" style="opacity:0.75; max-width:68ch">{signal.summary}</p>
 
-    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Notes</p>
-    <ul class="signals-notes">
-      {signal.notes.map((note) => <li>{note}</li>)}
-    </ul>
+        <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Notes</p>
+        <ul class="signals-notes">
+          {signal.notes.map((note) => <li>{note}</li>)}
+        </ul>
 
-    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Context</p>
-    <p class="t-body" style="opacity:0.75; max-width:68ch">{signal.context}</p>
+        <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Context</p>
+        <p class="t-body" style="opacity:0.75; max-width:68ch">{signal.context}</p>
+      </article>
 
-    <p class="t-label" style="opacity:0.35; margin-bottom:0.75rem; margin-top:2.5rem">Tags</p>
-    <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
-      {signal.tags.map((t) => <span class="tag tag--muted">{t}</span>)}
+      <aside class="signals-sidebar">
+        <div class="signals-sidebar__card">
+          <a href={signal.url} target="_blank" rel="noopener noreferrer" class="btn btn--outline" style="width:100%">
+            Watch source →
+          </a>
+          <div class="signals-sidebar__tags">
+            <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem">Tags</p>
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap">
+              {signal.tags.map((t) => <span class="tag tag--muted">{t}</span>)}
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
 
   </div>
@@ -103,7 +130,7 @@ const formatDate = (d: string) =>
 <style>
   .signals-entry-header {
     padding-top: 3rem;
-    padding-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
   }
 
   .signals-entry-header__top {
@@ -114,16 +141,108 @@ const formatDate = (d: string) =>
     flex-wrap: wrap;
   }
 
-  .signals-entry-header__meta {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-top: 1.25rem;
-    flex-wrap: wrap;
-  }
-
   .signals-entry-body {
     padding-block: var(--space-section);
+  }
+
+  .signals-body-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-gap);
+    align-items: start;
+  }
+
+  .signals-body-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .signals-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .signals-sidebar__card {
+    border: var(--border-width) solid var(--border);
+    padding: var(--space-card);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .signals-sidebar__tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .signals-hero {
+    margin-block: 2rem 0;
+  }
+
+  .signals-hero__image {
+    aspect-ratio: 3 / 1;
+    overflow: hidden;
+  }
+
+  .signals-hero__bg {
+    width: 100%;
+    height: 100%;
+    background: var(--black-native);
+    border: var(--border-width) solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+    position: relative;
+  }
+
+  .signals-hero__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .signals-hero__title {
+    font-family: var(--font-display);
+    font-size: var(--size-h1);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1;
+    color: var(--text-on-dark);
+    margin: 0;
+    max-width: 90%;
+  }
+
+  .signals-hero__meta {
+    display: flex;
+    gap: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--size-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-on-dark);
+    opacity: 0.6;
+  }
+
+  @media (max-width: 900px) {
+    .signals-body-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .signals-hero__bg {
+      padding: 1.5rem;
+    }
+
+    .signals-hero__title {
+      font-size: clamp(20px, 3vw, 32px);
+    }
+
+    .signals-hero__meta {
+      gap: 1rem;
+      font-size: 10px;
+    }
   }
 
   .signals-signal-block {
@@ -204,7 +323,7 @@ const formatDate = (d: string) =>
   import { animate } from 'motion';
   const ease = [0.16, 1, 0.3, 1] as const;
 
-  ['entry-header', 'entry-body', 'signals-nav'].forEach((id, i) => {
+  ['entry-header', 'entry-hero', 'entry-body', 'signals-nav'].forEach((id, i) => {
     const el = document.getElementById(id);
     if (el) {
       el.style.opacity = '0';
