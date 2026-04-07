@@ -51,11 +51,6 @@ const formatDate = (d: string) =>
             <div class="signals-hero__meta">
               <span class="t-mono">{signal.source} · {signal.author}</span>
             </div>
-            <div style="margin-top:1rem">
-              <a href={signal.url} target="_blank" rel="noopener noreferrer" class="btn btn--outline btn--sm">
-                Watch source →
-              </a>
-            </div>
           </div>
         </div>
       </div>
@@ -206,10 +201,10 @@ const formatDate = (d: string) =>
 
   .signals-hero__title {
     font-family: var(--font-display);
-    font-size: var(--size-h1);
+    font-size: clamp(28px, 5vw, 56px);
     font-weight: 400;
     font-style: italic;
-    line-height: 1;
+    line-height: 1.1;
     color: var(--text-on-dark);
     margin: 0;
     max-width: 90%;

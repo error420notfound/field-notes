@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { signals } from '../data/signals';
 
 const archiveEntries = await getCollection('archive', ({ data }) => !data.draft);
 const journalEntries = await getCollection('journal', ({ data }) => !data.draft);
@@ -35,7 +36,12 @@ const typeLabels: Record<string, string> = {
   calibration: 'Calibration',
 };
 
+const recentSignals = [...signals]
+  .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf())
+  .slice(0, 3);
+
 const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+const formatSignalDate = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 ---
 
 <BaseLayout title="Field Notes" description="HS108's living intellectual system — part archive, part journal, part publication.">
@@ -78,6 +84,11 @@ const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', 
             <span class="fn-mode-dot" style="background:var(--teal-black-native)"></span>
             <span class="t-label">Zine</span>
             <span class="t-mono" style="opacity:0.4">{zineIssues.length} issues</span>
+          </a>
+          <a href="/signals" class="fn-mode-block">
+            <span class="fn-mode-dot" style="background:#1E6C62"></span>
+            <span class="t-label">Signals</span>
+            <span class="t-mono" style="opacity:0.4">{signals.length} signal{signals.length === 1 ? '' : 's'}</span>
           </a>
         </div>
       </div>
@@ -201,11 +212,39 @@ const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', 
 
   <hr />
 
+  <!-- ── Signals stream ────────────────────────────────────────── -->
+  {recentSignals.length > 0 && (
+    <section class="section container" id="signals-section">
+      <div class="section-header" id="signals-header">
+        <div>
+          <p class="t-label section-num">03 — Signals</p>
+          <h2 class="t-h2"><em>Filtered intelligence</em></h2>
+        </div>
+        <a href="/signals" class="btn btn--outline">All Signals →</a>
+      </div>
+
+      <div id="signals-list">
+        {recentSignals.map((signal) => (
+          <a href={`/signals/${signal.slug}`} class="signals-row">
+            <span class="tag">{signal.source}</span>
+            <div>
+              <p class="signals-row__title">{signal.title}</p>
+              <p class="signals-row__signal">{signal.signal}</p>
+            </div>
+            <span class="t-mono signals-row__date">{formatSignalDate(signal.date)}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <hr />
+
   <!-- ── Journal stream ────────────────────────────────────────── -->
   <section class="section container" id="journal-section">
     <div class="section-header" id="journal-header">
       <div>
-        <p class="t-label section-num">03 — Journal</p>
+        <p class="t-label section-num">04 — Journal</p>
         <h2 class="t-h2"><em>Process, live</em></h2>
       </div>
       <a href="/journal" class="btn btn--outline">Full Journal →</a>
@@ -357,11 +396,50 @@ const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', 
 
   .fn-archive-row__date { padding-top: 2px; white-space: nowrap; }
 
+  /* Signals list */
+  #signals-list {
+    display: flex;
+    flex-direction: column;
+    border: var(--border-width) solid var(--border);
+  }
+
+  .signals-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 1rem;
+    padding: 1.25rem var(--space-card);
+    border-bottom: var(--border-width) solid var(--border);
+    transition: background var(--transition);
+  }
+
+  .signals-row:last-child { border-bottom: none; }
+  .signals-row:hover { background: var(--surface-elevated); }
+
+  .signals-row__title {
+    font-family: var(--font-display);
+    font-size: clamp(16px, 1.4vw, 19px);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.25;
+  }
+
+  .signals-row__signal {
+    font-size: 13px;
+    margin-top: 0.25rem;
+    line-height: 1.45;
+    opacity: 0.65;
+  }
+
+  .signals-row__date { padding-top: 2px; white-space: nowrap; opacity: 0.35; }
+
   @media (max-width: 900px) {
     .fn-hero__bottom { grid-template-columns: 1fr; }
     .fn-archive-split { grid-template-columns: 1fr; }
     .fn-archive-row { grid-template-columns: 1fr; gap: 0.5rem; }
     .fn-archive-row__date { display: none; }
+    .signals-row { grid-template-columns: 1fr; gap: 0.5rem; }
+    .signals-row__date { display: none; }
   }
 
   @media (max-width: 640px) {
@@ -385,7 +463,7 @@ const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', 
   if (bottom)   animate(bottom,   { opacity: [0,1], transform: ['translateY(18px)','translateY(0)'] }, { duration: 0.55, easing: ease, delay: 0.42 });
 
   // Section headers scroll reveal
-  ['archive-header','zine-header','journal-header'].forEach(id => {
+  ['archive-header','zine-header','signals-header','journal-header'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.style.opacity = '0';
