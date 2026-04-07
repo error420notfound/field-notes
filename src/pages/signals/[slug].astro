@@ -1,0 +1,217 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { signals, type Signal } from '../../data/signals';
+
+export async function getStaticPaths() {
+  return signals.map(s => ({
+    params: { slug: s.slug },
+    props: { signal: s },
+  }));
+}
+
+const { signal } = Astro.props as { signal: Signal };
+
+const sorted = [...signals].sort((a, b) =>
+  new Date(b.date).valueOf() - new Date(a.date).valueOf()
+);
+const idx  = sorted.findIndex(s => s.slug === signal.slug);
+const prev = sorted[idx + 1] ?? null;
+const next = sorted[idx - 1] ?? null;
+
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<BaseLayout
+  title={signal.title}
+  description={signal.signal}
+>
+
+  <!-- Header -->
+  <div class="container signals-entry-header" id="entry-header">
+    <div class="signals-entry-header__top">
+      <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap">
+        <a href="/signals" class="t-mono link-swap" style="opacity:0.5">← Signals</a>
+        <span class="t-mono" style="opacity:0.3">/</span>
+        <span class="tag">{signal.source}</span>
+      </div>
+      <span class="t-mono" style="opacity:0.4">{formatDate(signal.date)}</span>
+    </div>
+
+    <h1 class="t-h1" style="font-style:italic; margin-top:1.5rem">{signal.title}</h1>
+
+    <div class="signals-entry-header__meta">
+      <span class="t-mono" style="opacity:0.5">{signal.source} · {signal.author}</span>
+      <a href={signal.url} target="_blank" rel="noopener noreferrer" class="btn btn--outline btn--sm">
+        Watch source →
+      </a>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- Body -->
+  <div class="container signals-entry-body" id="entry-body">
+
+    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem">Signal</p>
+    <blockquote class="signals-signal-block">{signal.signal}</blockquote>
+
+    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Summary</p>
+    <p class="t-body" style="opacity:0.75; max-width:68ch">{signal.summary}</p>
+
+    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Notes</p>
+    <ul class="signals-notes">
+      {signal.notes.map((note) => <li>{note}</li>)}
+    </ul>
+
+    <p class="t-label" style="opacity:0.35; margin-bottom:0.5rem; margin-top:2.5rem">Context</p>
+    <p class="t-body" style="opacity:0.75; max-width:68ch">{signal.context}</p>
+
+    <p class="t-label" style="opacity:0.35; margin-bottom:0.75rem; margin-top:2.5rem">Tags</p>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
+      {signal.tags.map((t) => <span class="tag tag--muted">{t}</span>)}
+    </div>
+
+  </div>
+
+  <hr />
+
+  <!-- Prev / Next -->
+  <div class="container signals-nav" id="signals-nav">
+    <div>
+      {prev && (
+        <a href={`/signals/${prev.slug}`} class="signals-nav__item">
+          <span class="t-mono" style="opacity:0.4">← Earlier</span>
+          <p class="signals-nav__title">{prev.title}</p>
+          <span class="t-mono" style="opacity:0.35">{formatDate(prev.date)}</span>
+        </a>
+      )}
+    </div>
+    <div style="text-align:right">
+      {next && (
+        <a href={`/signals/${next.slug}`} class="signals-nav__item signals-nav__item--right">
+          <span class="t-mono" style="opacity:0.4">More recent →</span>
+          <p class="signals-nav__title">{next.title}</p>
+          <span class="t-mono" style="opacity:0.35">{formatDate(next.date)}</span>
+        </a>
+      )}
+    </div>
+  </div>
+
+</BaseLayout>
+
+<style>
+  .signals-entry-header {
+    padding-top: 3rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .signals-entry-header__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .signals-entry-header__meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .signals-entry-body {
+    padding-block: var(--space-section);
+  }
+
+  .signals-signal-block {
+    border-left: var(--border-width) solid var(--accent-strong);
+    padding-left: 2rem;
+    margin-block: 1rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.2vw, 28px);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.3;
+    max-width: 60ch;
+  }
+
+  .signals-notes {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-block: 1rem;
+  }
+
+  .signals-notes li {
+    padding-left: 1.5rem;
+    position: relative;
+    font-family: var(--font-body);
+    font-size: var(--size-body);
+    line-height: 1.6;
+    opacity: 0.75;
+  }
+
+  .signals-notes li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    opacity: 0.4;
+    top: 6px;
+  }
+
+  .signals-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-gap);
+    padding-block: 3rem;
+  }
+
+  .signals-nav__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.5rem;
+    border: var(--border-width) solid var(--border);
+    transition: background var(--transition);
+  }
+
+  .signals-nav__item:hover { background: var(--surface-elevated); }
+
+  .signals-nav__title {
+    font-family: var(--font-display);
+    font-size: clamp(16px, 1.4vw, 20px);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.25;
+    margin-block: 0.25rem;
+  }
+
+  .signals-nav__item--right { text-align: right; }
+
+  @media (max-width: 640px) {
+    .signals-nav { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  import { animate } from 'motion';
+  const ease = [0.16, 1, 0.3, 1] as const;
+
+  ['entry-header', 'entry-body', 'signals-nav'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.opacity = '0';
+      animate(el,
+        { opacity: [0, 1], transform: ['translateY(14px)', 'translateY(0)'] },
+        { duration: 0.5, easing: ease, delay: 0.05 + i * 0.1 }
+      );
+    }
+  });
+</script>

@@ -4,9 +4,10 @@ const { currentPath = '' } = Astro.props;
 const isActive = (path: string) => currentPath.startsWith(path);
 
 const activeLabel =
-  isActive('/archive') ? 'Archive' :
-  isActive('/journal') ? 'Journal' :
-  isActive('/zine')    ? 'Zine'    : 'Menu';
+  isActive('/archive')  ? 'Archive' :
+  isActive('/journal')  ? 'Journal' :
+  isActive('/zine')     ? 'Zine'    :
+  isActive('/signals')  ? 'Signals' : 'Menu';
 ---
 
 <nav class="nav" id="main-nav">
@@ -28,6 +29,10 @@ const activeLabel =
     <a href="/zine" class={`nav__link ${isActive('/zine') ? 'active' : ''}`}>
       <span class="nav__mode-dot" style="background: var(--teal-black-native, #031410);"></span>
       <span class="label-text">Zine</span>
+    </a>
+    <a href="/signals" class={`nav__link ${isActive('/signals') ? 'active' : ''}`}>
+      <span class="nav__mode-dot" style="background: #1E6C62;"></span>
+      <span class="label-text">Signals</span>
     </a>
   </div>
 
@@ -63,6 +68,10 @@ const activeLabel =
   <a href="/zine" class={`nav__dropdown-link ${isActive('/zine') ? 'active' : ''}`}>
     <span class="nav__mode-dot" style="background: var(--teal-black-native, #031410);"></span>
     Zine
+  </a>
+  <a href="/signals" class={`nav__dropdown-link ${isActive('/signals') ? 'active' : ''}`}>
+    <span class="nav__mode-dot" style="background: #1E6C62;"></span>
+    Signals
   </a>
 </div>
 

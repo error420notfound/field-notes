@@ -1,0 +1,218 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { signals } from '../../data/signals';
+
+const sorted = [...signals].sort((a, b) =>
+  new Date(b.date).valueOf() - new Date(a.date).valueOf()
+);
+
+const byYear: Record<string, typeof sorted> = {};
+for (const s of sorted) {
+  const y = s.date.slice(0, 4);
+  if (!byYear[y]) byYear[y] = [];
+  byYear[y].push(s);
+}
+const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a));
+
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+---
+
+<BaseLayout
+  title="Signals"
+  description="Captured ideas, talks, and observations distilled to their core signal. Each entry is a thesis, not a summary."
+>
+
+  <!-- Page header -->
+  <div class="container page-header" id="page-header">
+    <p class="t-label" style="opacity:0.4">04 — Signals</p>
+    <h1 class="t-h1"><em>Filtered intelligence</em></h1>
+    <p class="t-large" style="opacity:0.55; max-width:55ch; margin-top:0.75rem">
+      Captured ideas, talks, and observations distilled to their core signal.
+      Each entry is a thesis, not a summary.
+    </p>
+  </div>
+
+  <hr />
+
+  <!-- Toolbar: count + view toggle -->
+  <div class="container signals-toolbar">
+    <span class="t-mono" style="opacity:0.4">{sorted.length} signal{sorted.length === 1 ? '' : 's'}</span>
+    <div class="signals-toggle-group">
+      <button class="btn btn--sm signals-view-toggle" data-view="list">List</button>
+      <button class="btn btn--sm signals-view-toggle" data-view="grid">Grid</button>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- Dual-view container -->
+  <div class="container" id="signals-body" data-view="list" style="padding-block: var(--space-section)">
+
+    <!-- LIST VIEW -->
+    <div id="signals-list" class="signals-list">
+      {years.map((year) => (
+        <div class="year-group" data-year={year}>
+          <div class="year-marker">
+            <span class="t-mono year-marker__label">{year}</span>
+            <div class="year-marker__rule" role="presentation"></div>
+          </div>
+          <div class="year-group__entries">
+            {byYear[year].map((s) => (
+              <a href={`/signals/${s.slug}`} class="entry-row">
+                <span class="entry-row__type">{s.source}</span>
+                <div class="entry-row__main">
+                  <p class="entry-row__title">{s.title}</p>
+                  <p class="entry-row__desc">{s.signal}</p>
+                  <div class="entry-row__tags">
+                    {s.tags.map((t) => <span class="tag tag--muted">{t}</span>)}
+                  </div>
+                </div>
+                <span class="entry-row__date">{formatDate(s.date)}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- GRID VIEW -->
+    <div id="signals-grid" class="grid-3">
+      {sorted.map((s) => (
+        <a href={`/signals/${s.slug}`} class="entry-card">
+          <div class="entry-card__meta">
+            <span class="tag">{s.source}</span>
+            <span class="t-mono" style="opacity:0.4">{s.author}</span>
+          </div>
+          <p class="entry-card__title">{s.title}</p>
+          <p class="entry-card__thesis">{s.signal}</p>
+          <div class="entry-card__footer">
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap">
+              {s.tags.slice(0, 2).map((t) => <span class="tag tag--muted">{t}</span>)}
+            </div>
+            <span class="t-mono" style="opacity:0.35">{formatDate(s.date)}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+
+  </div>
+
+</BaseLayout>
+
+<style>
+  .page-header {
+    padding-top: 3rem;
+    padding-bottom: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .signals-toolbar {
+    padding-block: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .signals-toggle-group {
+    display: flex;
+    border: var(--border-width) solid var(--border);
+  }
+
+  .signals-toggle-group .btn {
+    border: none;
+  }
+
+  .signals-toggle-group .btn + .btn {
+    border-left: var(--border-width) solid var(--border);
+  }
+
+  .signals-view-toggle.active {
+    background: var(--accent);
+    color: var(--black-native);
+  }
+
+  /* View switching */
+  #signals-body[data-view="list"] #signals-grid { display: none; }
+  #signals-body[data-view="grid"] #signals-list { display: none; }
+
+  .signals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .year-group__entries {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .entry-row__tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.4rem;
+  }
+</style>
+
+<script>
+  import { animate, inView, stagger } from 'motion';
+  const ease = [0.16, 1, 0.3, 1] as const;
+
+  // Page header entrance
+  const header = document.getElementById('page-header');
+  if (header) {
+    header.style.opacity = '0';
+    animate(header, { opacity: [0, 1], transform: ['translateY(16px)', 'translateY(0)'] },
+      { duration: 0.5, easing: ease, delay: 0.08 });
+  }
+
+  // View toggle + localStorage
+  const body = document.getElementById('signals-body') as HTMLElement;
+  const savedView = (localStorage.getItem('signals-view') as 'list' | 'grid') ?? 'list';
+  body.dataset.view = savedView;
+
+  document.querySelectorAll<HTMLButtonElement>('.signals-view-toggle').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === savedView);
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.signals-view-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.view!;
+      body.dataset.view = v;
+      localStorage.setItem('signals-view', v);
+      document.querySelectorAll<HTMLButtonElement>('.signals-view-toggle').forEach(b =>
+        b.classList.toggle('active', b.dataset.view === v)
+      );
+      const target = document.getElementById(v === 'list' ? 'signals-list' : 'signals-grid');
+      if (target) animate(target, { opacity: [0, 1] }, { duration: 0.25, easing: ease });
+    });
+  });
+
+  // Row stagger — list view
+  document.querySelectorAll<HTMLElement>('.year-group').forEach(group => {
+    const rows = group.querySelectorAll('.entry-row');
+    rows.forEach(r => { (r as HTMLElement).style.opacity = '0'; });
+    inView(group, () => {
+      animate(rows as NodeListOf<Element>,
+        { opacity: [0, 1], transform: ['translateY(12px)', 'translateY(0)'] },
+        { duration: 0.4, easing: ease, delay: stagger(0.05) }
+      );
+    }, { amount: 0.05 });
+  });
+
+  // Card stagger — grid view
+  const grid = document.getElementById('signals-grid');
+  if (grid) {
+    const cards = grid.querySelectorAll('.entry-card');
+    cards.forEach(c => { (c as HTMLElement).style.opacity = '0'; });
+    inView(grid, () => {
+      animate(cards as NodeListOf<Element>,
+        { opacity: [0, 1], transform: ['translateY(20px)', 'translateY(0)'] },
+        { duration: 0.5, easing: ease, delay: stagger(0.08) }
+      );
+    }, { amount: 0.1 });
+  }
+</script>
